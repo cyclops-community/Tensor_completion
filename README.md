@@ -9,7 +9,7 @@ Usage of these codes requires installation of the [Cyclops library](https://gith
 ## Execution
 
 To benchmark and test the codes run `combined_test.py`, which maybe used as follows.
-```sh
+```
 python ./combined_test.py --help
 usage: combined_test.py [-h] [--I int] [--J int] [--K int] [--R int]
                         [--num-iter-ALS-implicit int]
