@@ -1,3 +1,1 @@
-# Tensor_completion
-
-Ongoing Research Project in LPNA(Laboratory for Parallel Numerical Algorithms) with Professor Edgar Solomonik
+This repository contains tensor completion algorithms implemented using hte Python interface to Cyclops.
