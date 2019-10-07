@@ -8,13 +8,10 @@ import os
 import argparse
 import arg_defs as arg_defs
 
-sys.path.insert(0, '../SGD')
-from gradient1 import sparse_SGD
-sys.path.insert(0, '../ALS')
-from als_sp import getALS_CG
-sys.path.insert(0, '../CCD')
-from ccd_sp import run_CCD
-from ccd_sp import get_objective
+from sgd import sparse_SGD
+from als import getALS_CG
+from ccd import run_CCD
+from ccd import get_objective
 
 glob_comm = ctf.comm()
 
