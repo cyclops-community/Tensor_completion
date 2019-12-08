@@ -18,33 +18,30 @@ class implicit_ATA:
         self.string = string
         self.use_MTTKRP = use_MTTKRP
 
-    def mul(self, idx, sk):
+    def MTTKRP_TTTP(self, sk, out):
         if self.use_MTTKRP:
             if self.string=="U":
-                out = ctf.tensor([self.omega.shape[0], self.f1.shape[1]])
                 ctf.MTTKRP(ctf.TTTP(self.omega, [sk, self.f1, self.f2]),[out,self.f1,self.f2],0)
             elif self.string=="V":
-                out = ctf.tensor([self.omega.shape[1], self.f1.shape[1]])
                 ctf.MTTKRP(ctf.TTTP(self.omega, [self.f1, sk, self.f2]),[self.f1,out,self.f2],1)
             elif self.string=="W":
-                out = ctf.tensor([self.omega.shape[2], self.f1.shape[1]])
                 ctf.MTTKRP(ctf.TTTP(self.omega, [self.f1, self.f2, sk]),[self.f1,self.f2,out],2)
             else:
-                return ValueError("Invalid string for MTTKRP_mul")
-            return out.i(idx)
+                print("Invalid string for implicit MTTKRP_TTTP")
         else:
+            idx = "ir"
             if self.string=="U":
-                return  self.f1.i("J"+idx[1]) \
-                       *self.f2.i("K"+idx[1]) \
-                       *ctf.TTTP(self.omega, [sk, self.f1, self.f2]).i(idx[0]+"JK")
+                out.i(idx) << self.f1.i("J"+idx[1]) \
+                             *self.f2.i("K"+idx[1]) \
+                             *ctf.TTTP(self.omega, [sk, self.f1, self.f2]).i(idx[0]+"JK")
             if self.string=="V":
-                return  self.f1.i("I"+idx[1]) \
-                       *self.f2.i("K"+idx[1]) \
-                       *ctf.TTTP(self.omega, [self.f1, sk, self.f2]).i("I"+idx[0]+"K")
+                out.i(idx) << self.f1.i("I"+idx[1]) \
+                             *self.f2.i("K"+idx[1]) \
+                             *ctf.TTTP(self.omega, [self.f1, sk, self.f2]).i("I"+idx[0]+"K")
             if self.string=="W":
-                return  self.f1.i("I"+idx[1]) \
-                       *self.f2.i("J"+idx[1]) \
-                       *ctf.TTTP(self.omega, [self.f1, self.f2, sk]).i("IJ"+idx[0])
+                out.i(idx) << self.f1.i("I"+idx[1]) \
+                             *self.f2.i("J"+idx[1]) \
+                             *ctf.TTTP(self.omega, [self.f1, self.f2, sk]).i("IJ"+idx[0])
 
 def CG(A,b,x0,r,regParam,I,is_implicit=False):
 
@@ -53,7 +50,7 @@ def CG(A,b,x0,r,regParam,I,is_implicit=False):
 
     Ax0 = ctf.tensor((I,r))
     if is_implicit:
-        Ax0.i("ir") << A.mul("ir",x0)
+        A.MTTKRP_TTTP(x0,Ax0)
     else:
         Ax0.i("ir") << A.i("irl")*x0.i("il")
     Ax0 += regParam*x0
@@ -66,7 +63,7 @@ def CG(A,b,x0,r,regParam,I,is_implicit=False):
         t_cg_bmvec.start()
         t0 = time.time()
         if is_implicit:
-            Ask.i("ir") << A.mul("ir",sk)
+            A.MTTKRP_TTTP(sk,Ask)
         else:
             Ask.i("ir") << A.i("irl")*sk.i("il")
         t1 = time.time()

@@ -28,7 +28,7 @@ def get_objective(T,U,V,W,omega,regParam):
     return [objective, RMSE]
 
 
-def run_CCD(T,U,V,W,omega,regParam,num_iter,time_limit,objective_frequency,use_TTTP=True):
+def run_CCD(T,U,V,W,omega,regParam,num_iter,time_limit,objective_frequency,use_MTTKRP=True):
     U_vec_list = []
     V_vec_list = []
     W_vec_list = []
@@ -90,17 +90,19 @@ def run_CCD(T,U,V,W,omega,regParam,num_iter,time_limit,objective_frequency,use_T
                 print('updating U[:,{}]'.format(f))
 
             t0 = time.time()
-            if use_TTTP:
+            if use_MTTKRP:
                 alphas = ctf.tensor(R.shape[0])
-                ctf.einsum('ijk -> i', ctf.TTTP(R, [None, V_vec_list[f], W_vec_list[f]]),out=alphas)
+                #ctf.einsum('ijk -> i', ctf.TTTP(R, [None, V_vec_list[f], W_vec_list[f]]),out=alphas)
+                ctf.MTTKRP(R, [alphas, V_vec_list[f], W_vec_list[f]], 0)
             else:
                 alphas = ctf.einsum('ijk, j, k -> i', R, V_vec_list[f], W_vec_list[f])
 
             t1 = time.time()
 
-            if use_TTTP:
+            if use_MTTKRP:
                 betas = ctf.tensor(R.shape[0])
-                ctf.einsum('ijk -> i', ctf.TTTP(omega, [None, V_vec_list[f]*V_vec_list[f], W_vec_list[f]*W_vec_list[f]]),out=betas)
+                #ctf.einsum('ijk -> i', ctf.TTTP(omega, [None, V_vec_list[f]*V_vec_list[f], W_vec_list[f]*W_vec_list[f]]),out=betas)
+                ctf.MTTKRP(omega, [betas, V_vec_list[f]*V_vec_list[f], W_vec_list[f]*W_vec_list[f]], 0)
             else:
                 betas = ctf.einsum('ijk, j, j, k, k -> i', omega, V_vec_list[f], V_vec_list[f], W_vec_list[f], W_vec_list[f])
 
@@ -117,15 +119,17 @@ def run_CCD(T,U,V,W,omega,regParam,num_iter,time_limit,objective_frequency,use_T
             # update V[:,f]
             if glob_comm.rank() == 0 and status_prints == True:
                 print('updating V[:,{}]'.format(f))
-            if use_TTTP:
+            if use_MTTKRP:
                 alphas = ctf.tensor(R.shape[1])
-                ctf.einsum('ijk -> j', ctf.TTTP(R, [U_vec_list[f], None, W_vec_list[f]]),out=alphas)
+                #ctf.einsum('ijk -> j', ctf.TTTP(R, [U_vec_list[f], None, W_vec_list[f]]),out=alphas)
+                ctf.MTTKRP(R, [U_vec_list[f], alphas, W_vec_list[f]], 1)
             else:
                 alphas = ctf.einsum('ijk, i, k -> j', R, U_vec_list[f], W_vec_list[f])
 
-            if use_TTTP:
+            if use_MTTKRP:
                 betas = ctf.tensor(R.shape[1])
-                ctf.einsum('ijk -> j', ctf.TTTP(omega, [U_vec_list[f]*U_vec_list[f], None, W_vec_list[f]*W_vec_list[f]]),out=betas)
+                #ctf.einsum('ijk -> j', ctf.TTTP(omega, [U_vec_list[f]*U_vec_list[f], None, W_vec_list[f]*W_vec_list[f]]),out=betas)
+                ctf.MTTKRP(omega, [U_vec_list[f]*U_vec_list[f], betas, W_vec_list[f]*W_vec_list[f]], 1)
             else:
                 betas = ctf.einsum('ijk, i, i, k, k -> j', omega, U_vec_list[f], U_vec_list[f], W_vec_list[f], W_vec_list[f])
 
@@ -135,15 +139,17 @@ def run_CCD(T,U,V,W,omega,regParam,num_iter,time_limit,objective_frequency,use_T
 
             if glob_comm.rank() == 0 and status_prints == True:
                 print('updating W[:,{}]'.format(f))
-            if use_TTTP:
+            if use_MTTKRP:
                 alphas = ctf.tensor(R.shape[2])
-                ctf.einsum('ijk -> k', ctf.TTTP(R, [U_vec_list[f], V_vec_list[f], None]),out=alphas)
+                #ctf.einsum('ijk -> k', ctf.TTTP(R, [U_vec_list[f], V_vec_list[f], None]),out=alphas)
+                ctf.MTTKRP(R, [U_vec_list[f], W_vec_list[f], alphas], 2)
             else:
                 alphas = ctf.einsum('ijk, i, j -> k', R, U_vec_list[f], V_vec_list[f])
 
-            if use_TTTP:
+            if use_MTTKRP:
                 betas = ctf.tensor(R.shape[2])
-                ctf.einsum('ijk -> k', ctf.TTTP(omega, [U_vec_list[f]*U_vec_list[f], V_vec_list[f]*V_vec_list[f], None]),out=betas)
+                #ctf.einsum('ijk -> k', ctf.TTTP(omega, [U_vec_list[f]*U_vec_list[f], V_vec_list[f]*V_vec_list[f], None]),out=betas)
+                ctf.MTTKRP(omega, [U_vec_list[f]*U_vec_list[f], V_vec_list[f]*V_vec_list[f], betas], 2)
             else:
                 betas = ctf.einsum('ijk, i, i, j, j -> k', omega, U_vec_list[f], U_vec_list[f], V_vec_list[f], V_vec_list[f])
 

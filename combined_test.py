@@ -111,7 +111,7 @@ if __name__ == "__main__":
     sample_frac_SGD = args.sample_frac_SGD
     use_func_tsr = args.function_tensor
     tensor_file = args.tensor_file
-    use_CCD_TTTP = args.use_CCD_TTTP
+    use_MTTKRP = args.use_MTTKRP
 
 
     if use_func_tsr == True:
@@ -134,6 +134,7 @@ if __name__ == "__main__":
             print("Dense tensor shape is",T.shape)
 
         print("Computing tensor completion with CP rank",R)
+        print("use_MTTKRP set to",use_MTTKRP)
 
     omega = getOmega(T)
     U = ctf.random.random((I, R))
@@ -152,7 +153,7 @@ if __name__ == "__main__":
         V_copy = ctf.copy(V)
         W_copy = ctf.copy(W)
 
-        getALS_CG(T,U_copy,V_copy,W_copy,reg_ALS,omega,I,J,K,R,block_size_ALS_imp,numiter_ALS_imp,err_thresh,time_limit,True)
+        getALS_CG(T,U_copy,V_copy,W_copy,reg_ALS,omega,I,J,K,R,block_size_ALS_imp,numiter_ALS_imp,err_thresh,time_limit,True,use_MTTKRP)
 
     if numiter_ALS_exp > 0:
         if ctf.comm().rank() == 0:
@@ -162,18 +163,18 @@ if __name__ == "__main__":
         V_copy = ctf.copy(V)
         W_copy = ctf.copy(W)
 
-        getALS_CG(T,U_copy,V_copy,W_copy,reg_ALS,omega,I,J,K,R,block_size_ALS_exp,numiter_ALS_exp,err_thresh,time_limit,False)
+        getALS_CG(T,U_copy,V_copy,W_copy,reg_ALS,omega,I,J,K,R,block_size_ALS_exp,numiter_ALS_exp,err_thresh,time_limit,False,use_MTTKRP)
 
 
     if numiter_CCD > 0:
         if ctf.comm().rank() == 0:
-            print("Performing up to",numiter_CCD,"iterations, or reaching time limit of",time_limit,"seconds of CCD with use of TTTP for contractions set to use_CCD_TTTP =",use_CCD_TTTP)
+            print("Performing up to",numiter_CCD,"iterations, or reaching time limit of",time_limit,"seconds of CCD")
             print("CCD regularization parameter is",reg_CCD)
         U_copy = ctf.copy(U)
         V_copy = ctf.copy(V)
         W_copy = ctf.copy(W)
 
-        run_CCD(T,U_copy,V_copy,W_copy,omega,reg_CCD,numiter_CCD,time_limit,objfreq_CCD,use_CCD_TTTP)
+        run_CCD(T,U_copy,V_copy,W_copy,omega,reg_CCD,numiter_CCD,time_limit,objfreq_CCD,use_MTTKRP)
 
 
     if numiter_SGD > 0:
@@ -184,7 +185,7 @@ if __name__ == "__main__":
         V_copy = ctf.copy(V)
         W_copy = ctf.copy(W)
 
-        sparse_SGD(T, U_copy, V_copy, W_copy, reg_SGD, omega, I, J, K, R, learn_rate, sample_frac_SGD, numiter_SGD, err_thresh, time_limit, objfreq_SGD)
+        sparse_SGD(T, U_copy, V_copy, W_copy, reg_SGD, omega, I, J, K, R, learn_rate, sample_frac_SGD, numiter_SGD, err_thresh, time_limit, objfreq_SGD,use_MTTKRP)
 
 
 

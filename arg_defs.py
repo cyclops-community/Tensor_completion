@@ -133,11 +133,11 @@ def add_general_arguments(parser):
         metavar='int',
         help='whether to use function tensor as test problem (default: 0, i.e. False, use explicit low CP-rank sampled tensor)')
     parser.add_argument(
-        '--use-CCD-TTTP',
+        '--use-MTTKRP',
         type=int,
         default=1,
         metavar='int',
-        help='whether to use TTTP for CCD contractions (default: 1, i.e. Yes)')
+        help='whether to use special MTTKRP kernel (default: 1, i.e. Yes)')
     parser.add_argument(
         '--tensor-file',
         type=str,
