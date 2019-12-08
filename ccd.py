@@ -142,7 +142,7 @@ def run_CCD(T,U,V,W,omega,regParam,num_iter,time_limit,objective_frequency,use_M
             if use_MTTKRP:
                 alphas = ctf.tensor(R.shape[2])
                 #ctf.einsum('ijk -> k', ctf.TTTP(R, [U_vec_list[f], V_vec_list[f], None]),out=alphas)
-                ctf.MTTKRP(R, [U_vec_list[f], W_vec_list[f], alphas], 2)
+                ctf.MTTKRP(R, [U_vec_list[f], V_vec_list[f], alphas], 2)
             else:
                 alphas = ctf.einsum('ijk, i, j -> k', R, U_vec_list[f], V_vec_list[f])
 
