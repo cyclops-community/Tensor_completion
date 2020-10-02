@@ -25,6 +25,12 @@ def add_general_arguments(parser):
         metavar='int',
         help='Input CP decomposition rank (default: 10)')
     parser.add_argument(
+        '--num-iter-GN',
+        type=int,
+        default=10,
+        metavar='int',
+        help='Number of iterations (sweeps) to run GN (default: 10)')
+    parser.add_argument(
         '--num-iter-ALS-implicit',
         type=int,
         default=100,
