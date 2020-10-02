@@ -8,6 +8,7 @@ Created on Sat Apr 18 14:30:39 2020
 import numpy as np
 import numpy.linalg as la
 import time
+import csv
 
 
 class CP_GN_Completer():
@@ -47,7 +48,6 @@ class CP_GN_Completer():
         lst_mat[0] = delta[0].copy()
         inter = self.tenpy.TTTP(self.Omega, lst_mat)
         for n in range(1,N):
-            ret.append(self.tenpy.zeros(self.A[n].shape))
             lst_mat= self.A[:]
             lst_mat[n] = delta[n].copy()
             inter += self.tenpy.TTTP(self.Omega, lst_mat)
@@ -59,6 +59,7 @@ class CP_GN_Completer():
         ret[0]+=lst_mat[0]
         ret[0]+= regu*delta[0]
         for n in range(1,N):
+            ret.append(self.tenpy.zeros(self.A[n].shape))
             lst_mat = self.A[:]
             lst_mat[n] = self.tenpy.zeros(self.A[n].shape)
             self.tenpy.MTTKRP(inter,lst_mat,n)
@@ -198,9 +199,9 @@ class CP_GN_Completer():
         print("TOTAL CG ITERATIONS :",self.total_cg)
         self.update_A(delta)
         
-        return self.A
+        return self.A,self.total_cg
 
-def getCPGN(tenpy, T_in, T, O, U, V, W, reg_GN,I,J,K,R, num_iter_GN):
+def getCPGN(tenpy, T_in, T, O, U, V, W, reg_GN,I,J,K,R, num_iter_GN,tol,csv_file):
     opt = CP_GN_Completer(tenpy, T_in, O, [U,V,W])
 
     #if T_in.sp == True:
@@ -214,16 +215,31 @@ def getCPGN(tenpy, T_in, T, O, U, V, W, reg_GN,I,J,K,R, num_iter_GN):
     start= time.time()
     # T_in = backend.einsum('ijk,ijk->ijk',T,O)
     it = 0
+    time_all = 0
+    if csv_file is not None:
+        csv_writer = csv.writer(
+            csv_file, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
 
     for i in range(num_iter_GN):
         it += 1
-        [U,V,W] = opt.step(regu)
-        print("After " + str(it) + " iterations,")
-        print("RMSE",(tenpy.vecnorm(tenpy.TTTP(O,[U,V,W])-T_in))/(tenpy.sum(O))**0.5)
-        print("Full Tensor Objective",(tenpy.norm(tenpy.einsum('ir,jr,kr->ijk',U,V,W)-T)))
+        s = time.time()
+        [X,cg_iters] = opt.step(regu)
+        e = time.time()
+        time_all+= e- s
+        rmse = tenpy.vecnorm(tenpy.TTTP(O,X)-T_in)/(tenpy.sum(O))**0.5
+        if tenpy.is_master_proc():
+            print("After " + str(it) + " iterations,")
+            print("RMSE is",rmse)
+            print("Full Tensor Objective",(tenpy.norm(tenpy.einsum('ir,jr,kr->ijk',X[0],X[1],X[2])-T)))
+            if csv_file is not None:
+                csv_writer.writerow([i,time_all, rmse, cg_iters,'GN'])
+                csv_file.flush()
+            if rmse < tol:
+                print("Ending algo due to tolerance")
+                break
 
     end= time.time()
 
     print('GN time taken is ',end - start)
     
-    return [U,V,W]
+    return X
