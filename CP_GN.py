@@ -230,7 +230,7 @@ def getCPGN(tenpy, T_in, T, O, U, V, W, reg_GN,I,J,K,R, num_iter_GN,tol,csv_file
         if tenpy.is_master_proc():
             print("After " + str(it) + " iterations,")
             print("RMSE is",rmse)
-            print("Full Tensor Objective",(tenpy.norm(tenpy.einsum('ir,jr,kr->ijk',X[0],X[1],X[2])-T)))
+            #print("Full Tensor Objective",(tenpy.norm(tenpy.einsum('ir,jr,kr->ijk',X[0],X[1],X[2])-T)))
             if csv_file is not None:
                 csv_writer.writerow([i,time_all, rmse, cg_iters,'GN'])
                 csv_file.flush()
