@@ -12,6 +12,14 @@ import os
 import argparse
 import arg_defs as arg_defs
 
+import csv
+from pathlib import Path
+from os.path import dirname, join
+
+parent_dir = dirname(__file__)
+results_dir = join(parent_dir, 'results')
+
+
 import backend.ctf_ext as tenpy
 import backend.numpy_ext as tenpy_np
 
@@ -32,8 +40,8 @@ def getOmega(T):
     return Omega
 
 def create_lowr_tensor(I, J, K, r, sp_frac, use_sp_rep):
-    np.random.seed(1122)
-    ctf.random.seed(100)
+    np.random.seed(112)
+    ctf.random.seed(120)
     #U = ctf.random.random((I, r))
     U_np = np.random.randn(I,r)
     U = ctf.astensor(U_np, dtype=np.float64)
@@ -122,6 +130,13 @@ if __name__ == "__main__":
     arg_defs.add_general_arguments(parser)
     args, _ = parser.parse_known_args()
 
+    csv_path = join(results_dir, arg_defs.get_file_prefix(args)+'.csv')
+    is_new_log = not Path(csv_path).exists()
+    csv_file = open(csv_path, 'a')#, newline='')
+    csv_writer = csv.writer(
+        csv_file, delimiter=',', quotechar='|', quoting=csv.QUOTE_MINIMAL)
+
+
     I = args.I
     J = args.J
     K = args.K
@@ -144,12 +159,8 @@ if __name__ == "__main__":
     #K = 2182
     T,T_in,omega= create_lowr_tensor(I, J, K, R, sp_frac, use_sp_rep)
 
-    
 
-    
-
-
-    ctf.random.seed(10)
+    ctf.random.seed(225)
     U = ctf.random.random((I, R))
     V = ctf.random.random((J, R))
     W = ctf.random.random((K, R))
@@ -159,6 +170,16 @@ if __name__ == "__main__":
     if ctf.comm().rank() == 0:
         print("Initial RMSE is ", RMSE)
 
+    if tenpy.is_master_proc():
+        # print the arguments
+        for arg in vars(args) :
+            print( arg+':', getattr(args, arg))
+        # initialize the csv file
+        if is_new_log:
+            csv_writer.writerow([
+                'iterations', 'time', 'RMSE', 'CG_iter','Method'
+            ])
+    tol = 1e-04
     if numiter_ALS_imp > 0:
         if ctf.comm().rank() == 0:
             print(
@@ -186,7 +207,9 @@ if __name__ == "__main__":
             J,
             K,
             R,
-            numiter_ALS_imp
+            numiter_ALS_imp,
+            tol,
+            csv_file
             )
 
 
@@ -210,4 +233,6 @@ if __name__ == "__main__":
             J,
             K,
             R,
-            numiter_GN)
+            numiter_GN,
+            tol,
+            csv_file)
