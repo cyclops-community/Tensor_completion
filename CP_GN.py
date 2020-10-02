@@ -1,10 +1,3 @@
- #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Apr 18 14:30:39 2020
-
-@author: navjot
-"""
 import numpy as np
 import numpy.linalg as la
 import time
